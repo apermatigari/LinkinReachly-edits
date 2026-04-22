@@ -627,3 +627,47 @@ describe('llmMatchSnapshotToProfile', () => {
     expect(result.mappings[1].confidence).toBe(0)
   })
 })
+
+describe('generateApplicationEssayAnswer', () => {
+  beforeEach(() => {
+    vi.restoreAllMocks()
+    mockGetApiKey.mockReturnValue('test-key')
+  })
+
+  it('returns null without calling the LLM when no resume is provided', async () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch')
+
+    const { generateApplicationEssayAnswer } = await import('../../../src/main/llm-apply')
+
+    const result = await generateApplicationEssayAnswer(
+      { ...baseSettings, llmEnabled: true, resumeText: '' },
+      visionTestProfile,
+      'Tell me about a time you showed leadership.',
+      null  // no resumeText passed in
+    )
+
+    expect(result).toBeNull()
+    expect(fetchSpy).not.toHaveBeenCalled()
+  })
+
+  it('calls the LLM and returns an answer when resume is provided', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        choices: [{ message: { content: 'I led a team of three engineers to ship a product on time.' } }]
+      })
+    } as Response)
+
+    const { generateApplicationEssayAnswer } = await import('../../../src/main/llm-apply')
+
+    const result = await generateApplicationEssayAnswer(
+      { ...baseSettings, llmEnabled: true, resumeText: '' },
+      visionTestProfile,
+      'Tell me about a time you showed leadership.',
+      'Software engineer with 3 years experience leading teams at Acme Corp.'
+    )
+
+    expect(result).not.toBeNull()
+    expect(fetch).toHaveBeenCalledTimes(1)
+  })
+})

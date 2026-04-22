@@ -117,7 +117,10 @@ export async function generateApplicationEssayAnswer(
   }
 
   const resume = (resumeText?.trim() || settings.resumeText?.trim() || '').slice(0, 4000)
-
+  if (!resume) {
+    appLog.warn('Skipping essay generation due to missing or empty resume input')
+    return null
+  }
   const system = `You complete behavioral job application questions. Output ONLY the answer text.
 Rules: 2-5 sentences max. No markdown, bullets, or quotation marks around the whole answer. Be specific and professional. CRITICAL: Only reference experiences, skills, achievements, and facts that appear in the provided resume. Do not invent company names, fund names, investment amounts, certifications, degrees, locations, legal status, or compensation numbers. If the resume does not contain relevant experience for the question, stay honest and general — never fabricate.`
 
